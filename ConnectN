@@ -1,0 +1,410 @@
+#include <iostream>
+#include <fstream>
+#include<string>
+
+
+
+using namespace std;
+
+const int MaxRows = 14;
+const int MaxCols = 14;
+
+
+
+// for player info things 
+struct Player {
+    string Name;
+    char Mark;
+
+    Player(char mark = 'O', string PlayerName = "Player Name") {
+        Mark = mark;
+        Name = PlayerName;
+    }
+
+    void setPlayerName(string PlayerName) {
+        Name = PlayerName;
+        return;
+    }
+
+    void setPlayerMark(char PlayerMark) {
+        Mark = PlayerMark;
+        return;
+    }
+};
+
+struct GameBoard {
+    //char FillChar = '|';
+    string Board[MaxRows][MaxCols];
+    GameBoard(string FILL = "|-|") {
+        for (int r = 0; r < MaxRows; r++) {
+            for (int c = 0; c < MaxCols; c++) {
+                Board[r][c] = FILL;
+
+            }
+        }
+
+        return;
+    }
+};
+
+struct Connect_N {
+
+    GameBoard Board; // Game board to hold move data
+    int Rows, Columns; // Game board size
+    int ConnectLimit;// How many Marks to connect to win
+
+    Player Players[2];// list of players
+    int TurningPlayer; // index of turning player
+
+    int GameEndState;
+    // GameEndState 0 means game is not over
+    // GameEndState 1 means first player has won it
+    // GameEndState 2 means second player has won it
+
+    int Moves_Made[MaxCols];
+    // An array to hold the count of moves made in each
+    // column. It will help us determine the row for
+    // each move in an efficient way.
+
+    Connect_N(int R = 6, int C = 7, int Limit = 4) {
+        if (R < 0 || R > MaxRows)
+            R = 6;
+
+        if (C < 0 || C > MaxCols)
+            C = 7;
+
+        if (Limit < 0)
+            Limit = 4;
+
+        Rows = R;
+        Columns = C;
+        ConnectLimit = Limit;
+        TurningPlayer = 0;
+        GameEndState = 0;
+
+        for (int i = 0; i < MaxCols; i++)
+            Moves_Made[i] = 0;
+    }
+
+    bool MakeMove(int Col) {
+        //here col is the move 
+        if (Col >= Columns) {
+            cout << "\n \n ------------COLUMN NUMBER IS NOT IN THE LIMIT \n " << '\n';
+            return false;
+        }
+        // for (int i = 0; i < Columns; i++) {
+        if (Moves_Made[Col] >= Rows) {
+            cout << '\n' << "------------column is full. choose another value \n \n";
+            return false;
+        }
+        // }
+
+        int R = Moves_Made[Col];
+        Board.Board[Rows - 1 - R][Col] = Players[TurningPlayer].Mark;
+        TurningPlayer = (TurningPlayer + 1) % 2;
+        Moves_Made[Col]++;
+        return true;
+        // DONE FINALLYYYYYY it was kind of stupid that this took you 30 minutes 
+        /**
+            This function must validate the move and if
+            possible make that move and update the entire
+            state like board, turning player, GameEndState
+            etc.---done
+
+            It will return false if the move is not
+            possible for some reason and true if
+            move is valid and done successfully.
+
+            An incomplete definition of this function is given
+            below. You must update and complete it in all
+            respects.
+        */
+        // Your updated code goes here
+
+
+
+    }
+
+    int win() {
+        int winner, count = 0;
+        /////// for horizontal
+        for (int i = 0; i < Rows; i++) {
+            for (int j = 0; j < Columns; j++) {
+
+                if (Board.Board[i][j] == Board.Board[i][j + 1]
+                    && (Board.Board[i][j] == "X" || Board.Board[i][j] == "O")) {
+                    count++;
+
+                }
+
+            }
+        }
+        if (count != ConnectLimit) count = 0;
+        /////// for vertical
+        for (int i = 1; i < Rows; i++) {
+            for (int j = 0; j < Columns; j++) {
+                if (Board.Board[i][j] == Board.Board[i - 1][j] && (Board.Board[i][j] == "X" || Board.Board[i][j] == "O")
+                    && (Board.Board[i - 1][j] == "X" || Board.Board[i - 1][j] == "O")) {
+                    count++;
+                }
+            }
+        }
+        //     ///////for right up diagonal 
+        if (count != ConnectLimit) count = 0;
+
+        for (int i = Rows; i >= 0; i--) {
+            for (int j = 0; j < Columns; j++) {
+                if (Board.Board[i][j] == "X" || Board.Board[i][j] == "O") {
+                    if (Board.Board[i][j] == Board.Board[i - 1][j + 1]) {
+
+
+                        count++;
+
+                    }
+                }
+            }
+        }
+        ///////left down
+        if (count != ConnectLimit) count = 0;
+        for (int i = 0; i <= Rows; i++) {
+            for (int j = 0; j < Columns; j++) {
+                if (Board.Board[i][j] == "X" || Board.Board[i][j] == "O") {
+                    if (Board.Board[i][j] == Board.Board[i + 1][j + 1]) {
+                        count++;
+                    }
+                }
+            }
+        }
+        if (count == ConnectLimit) {
+            int winner;
+            if (TurningPlayer == 0) {
+                winner = 2;
+            }
+            else winner = 1;
+            cout << endl << endl << "----------------" << winner << "  has won" << endl << endl;
+            return TurningPlayer;
+        }
+
+        return 0;
+    }
+    bool GameisOn() {
+
+        int countt = 0;
+        int winner = win();
+        if (winner == 1) {
+
+            return GameEndState == 1;
+
+        }
+        else if (winner == 2)return GameEndState == 2;
+        // GameEndState 0 means game is not over
+        // GameEndState 1 means first player has won it
+        // GameEndState 2 means second player has won it
+        //GameEndState 3 means it is a tie
+        for (int i = 0; i < Columns; i++) {
+            if (Moves_Made[i] >= Rows) {
+                countt++;
+            }
+        }
+        if (countt == (Columns)) {
+            cout << "\n \n ----------- all columns full. game will end \n \n";
+            return GameEndState == 3;
+        }
+
+
+        return GameEndState == 0;
+    }
+
+    bool LoadSavedGame(string FileName) {
+
+        ifstream Myfile(FileName);
+
+        Myfile >> Rows >> Columns;
+        char FillChar = '0';
+        for (int i = 0; i < MaxCols; i++) {
+
+            for (int j = 0; j < MaxRows; j++)
+            {
+                Board.Board[i][j] = FillChar;
+
+            }
+
+        }
+
+        for (int i = 0; i < Columns; i++) {
+
+            for (int j = 0; j < Rows; j++)
+            {
+                Myfile >> Board.Board[i][j];
+
+            }
+        }
+
+        /**
+            This function must load a saved game
+            from a file into memory and must allow users
+            to continue playing it.
+
+            It will return false if the file can not be
+            opened or data can not be loaded from the file
+        */
+        return true;
+    }
+
+    bool SaveGame(string FileName) {
+        /**
+          This function must save the entire game data
+          into a file and return true.
+
+          It will return false if the file can not be
+          created or data can not be written for some
+          reason
+      */
+      //Your Code Goes Here
+
+        ofstream myfile(FileName);
+        // myfile.open("game.txt");
+
+        if (!myfile.is_open())
+        {
+            return false;
+        }
+
+        myfile << Rows << " " << Columns;
+        myfile << endl;
+
+        for (int r = 0; r < Rows; r++) {
+            for (int c = 0; c < Columns; c++)
+                myfile << Board.Board[r][c] << " ";
+            myfile << endl;
+        }
+
+
+
+        return true;
+    }
+
+    void ShowGame() {
+        /**
+         This function must show the game on screen and
+         if the game is not over take the next move from
+         the next player and return that move.
+
+         A very simple implementation is already provided
+         to get you started but you better replace it with
+         your code to produce a pleasing output
+         */
+
+         // Your better replace the following code
+
+        for (int r = 0; r < Rows; r++) {
+            for (int c = 0; c < Columns; c++)
+                cout << Board.Board[r][c] << "\t";
+            cout << endl << endl;
+        }
+        if (GameisOn())
+            cout << endl << Players[TurningPlayer].Name
+            << "("
+            << Players[TurningPlayer].Mark << ")  "
+            << "Moving " << endl;
+    }
+
+    void Play() {
+        int Move;
+        do {
+            ShowGame();
+            cout << "ENTER NEGATIVE NUMBER FOR THE MAIN MENU" << endl;
+            cout << "Please Enter Your Move ? (0 - " << (Columns - 1) << ") ";
+            cin >> Move;
+            if (Move < 0)
+                break;
+            //MakeMove(Move) = true;
+            MakeMove(Move);
+
+        } while (GameisOn());
+    }
+};
+
+int Menu() {
+    int Choice;
+    do {
+        cout << "1. Play" << endl
+            << "2. Save Game" << endl
+            << "3. Load Game" << endl
+            << "4. Exit" << endl
+            << "Enter You Choice (1 - 4) \n ";
+        cin >> Choice;
+    } while (Choice < 1 || Choice > 4);
+    return Choice;
+}
+
+void initNewGame(Connect_N& C) {
+    int Rows, Cols, Limit;
+    cout << "How Many Rows ?" << endl;
+    cin >> Rows;
+    cout << "How Many Cols ?" << endl;
+    cin >> Cols;
+    cout << "Connectivity Limit ?" << endl;
+    cin >> Limit;
+    C.Rows = Rows;
+    C.Columns = Cols;
+    C.ConnectLimit = Limit;
+    cout << "First Player Name? ";
+    string N;
+    cin >> N;
+    C.Players[0].setPlayerName(N);
+    cout << "Second Player Name? ";
+    cin >> N;
+
+    C.Players[1].setPlayerMark('X');
+    C.Players[1].setPlayerName(N);
+}
+
+int main()
+
+{
+
+    string FileName;
+    // Connect_N Filename;
+    int Choice;
+    bool GameNotLoaded = true;
+    Connect_N Connect_Game(MaxRows, MaxCols, MaxRows);
+    do {
+        Choice = Menu();
+        switch (Choice)
+        {
+        case 1:
+            if (GameNotLoaded) {
+                initNewGame(Connect_Game);
+                GameNotLoaded = false;
+            }
+            Connect_Game.Play();
+            break;
+        case 2:
+            cout << '\n' << "enter file name" << endl;
+            cin >> FileName;
+
+
+            if (Connect_Game.SaveGame(FileName)) {
+                cout << " \n \n game saved successfully \n \n";
+            }
+            else cout << " ---------------------------- game not saved" << endl;
+            break;
+
+        case 3:
+            cout << '\n' << "enter file name" << endl;
+            cin >> FileName;
+
+            // Connect_Game.LoadSavedGame(FileName);
+            if (Connect_Game.LoadSavedGame(FileName)) {
+                cout << " \n \n game loaded successfully \n \n";
+            }
+            else cout << " ---------------------------- game not loaded" << endl;
+            system("pause");
+            break;
+        }
+
+    } while (Choice != 4);
+    // system("pause");
+    return 0;
+}
